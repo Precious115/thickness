@@ -1,12 +1,15 @@
 const router = require('express').Router();
-const { getOrCreateUser, getUserById } = require('../../modules/users');
+const { getOrCreateUser, getUserById, verifyTelegramInitData } = require('../../modules/users');
 
 router.post('/login', async (req, res) => {
   try {
-    const { telegram_user } = req.body;
-    if (!telegram_user) return res.status(400).json({ error: 'No telegram_user provided' });
+    const { init_data } = req.body;
+    if (!init_data) return res.status(400).json({ error: 'No init_data provided' });
 
-    const user = await getOrCreateUser(telegram_user);
+    const telegramUser = verifyTelegramInitData(init_data);
+    if (!telegramUser) return res.status(401).json({ error: 'Invalid Telegram data' });
+
+    const user = await getOrCreateUser(telegramUser);
     res.json({ success: true, user });
   } catch (err) {
     res.status(500).json({ error: err.message });
