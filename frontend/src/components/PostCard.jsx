@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import PostActions from './PostActions';
 import CommentSheet from './CommentSheet';
 import LinkPreview from './LinkPreview';
+import { deletePost } from '../api';
 
 const BACKEND = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
 
@@ -12,17 +13,30 @@ function extractUrl(text) {
   return match ? match[0] : null;
 }
 
-export default function PostCard({ post, isPremium, userId, onLockTap }) {
+export default function PostCard({ post, isPremium, userId, onLockTap, isAdmin, adminSecret, onDeleted }) {
   const isLocked = post.tier === 'premium' && !isPremium;
   const [showComments, setShowComments] = useState(false);
   const [mediaUrl, setMediaUrl]         = useState(null);
   const [mediaError, setMediaError]     = useState(false);
+  const [deleting, setDeleting]         = useState(false);
 
   useEffect(() => {
     if (!isLocked && post.file_id) {
       setMediaUrl(`${BACKEND}/api/posts/media/${post.file_id}`);
     }
   }, [post.file_id, isLocked]);
+
+  async function handleDelete() {
+    if (!window.confirm('Delete this post?')) return;
+    setDeleting(true);
+    try {
+      await deletePost(post.id, adminSecret);
+      onDeleted?.(post.id);
+    } catch (err) {
+      alert('Failed to delete post.');
+      setDeleting(false);
+    }
+  }
 
   function renderMedia() {
     if (isLocked) {
@@ -66,6 +80,8 @@ export default function PostCard({ post, isPremium, userId, onLockTap }) {
     );
   }
 
+  if (deleting) return null;
+
   return (
     <>
       <div className="bg-card border border-border rounded-2xl overflow-hidden mb-4">
@@ -79,6 +95,16 @@ export default function PostCard({ post, isPremium, userId, onLockTap }) {
             <span className="absolute top-2 right-2 bg-amber-500 text-black text-xs font-bold px-2 py-0.5 rounded-full">
               ⭐ Premium
             </span>
+          )}
+
+          {/* Admin delete button */}
+          {isAdmin && (
+            <button
+              onClick={handleDelete}
+              className="absolute top-2 left-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-2 py-1 rounded-full"
+            >
+              🗑 Delete
+            </button>
           )}
         </div>
 
