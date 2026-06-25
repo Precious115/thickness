@@ -63,6 +63,7 @@ async function getPostById(postId) {
   return data;
 }
 
+// Delete by telegram_message_id (used by bot on channel post delete)
 async function deletePost(telegramMessageId) {
   await supabase
     .from('posts')
@@ -70,4 +71,12 @@ async function deletePost(telegramMessageId) {
     .eq('telegram_message_id', telegramMessageId);
 }
 
-module.exports = { syncPost, deletePost, getFeed, getPostById };
+// Delete by database UUID (used by admin panel)
+async function deletePostById(postId) {
+  await supabase
+    .from('posts')
+    .delete()
+    .eq('id', postId);
+}
+
+module.exports = { syncPost, deletePost, deletePostById, getFeed, getPostById };
