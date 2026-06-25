@@ -38,17 +38,18 @@ async function syncPost(message, tier) {
 }
 
 async function getFeed(tier) {
-  const query = supabase
+  let query = supabase
     .from('posts')
-    .select('*')
+    .select('*');
+
+  if (tier === 'free') {
+    query = query.eq('tier', 'free');
+  }
+
+  const { data } = await query
     .order('created_at', { ascending: false })
     .limit(50);
 
-  if (tier === 'free') {
-    query.eq('tier', 'free');
-  }
-
-  const { data } = await query;
   return data;
 }
 
