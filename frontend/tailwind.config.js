@@ -4,13 +4,14 @@ export default {
     './index.html',
     './src/**/*.{js,jsx}',
   ],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
         premium: '#f59e0b',
-        dark: '#0f0f0f',
-        card: '#1a1a1a',
-        border: '#2a2a2a',
+        dark: 'var(--bg)',
+        card: 'var(--card)',
+        border: 'var(--border)',
       },
     },
   },
