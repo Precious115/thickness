@@ -37,15 +37,21 @@ bot.on('channel_post', async (ctx) => {
 });
 
 // ── Channel post deleted ──────────────────────────────────────────────────────
-bot.on('deleted_channel_post', async (ctx) => {
-  try {
-    const messageId = ctx.update?.deleted_channel_post?.message_id
-      || ctx.update?.message_deleted?.message_id;
-    if (!messageId) return;
-    await deletePost(messageId);
-  } catch (err) {
-    console.error('Delete sync error:', err.message);
+// Telegraf doesn't natively support deleted_channel_post — handle via raw update
+bot.use(async (ctx, next) => {
+  const update = ctx.update;
+  if (update.channel_post_deleted || update.deleted_channel_post) {
+    try {
+      const messageId =
+        update.deleted_channel_post?.message_id ||
+        update.channel_post_deleted?.message_id;
+      if (messageId) await deletePost(messageId);
+    } catch (err) {
+      console.error('Delete sync error:', err.message);
+    }
+    return;
   }
+  return next();
 });
 
 // ── Telegram Stars payments ───────────────────────────────────────────────────
