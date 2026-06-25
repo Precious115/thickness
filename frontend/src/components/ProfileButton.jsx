@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import BookmarksSheet from './BookmarksSheet';
 
 const BACKEND = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
-const DEV_BOOST_SECRET = import.meta.env.VITE_DEV_BOOST_SECRET || 'devboost123';
+const DEV_BOOST_SECRET = import.meta.env.VITE_DEV_BOOST_SECRET || import.meta.env.VITE_DEV_PASSWORD || 'devboost123';
 
 export default function ProfileButton({ user, isPremium, expiresAt, devBoostUnlocked, onDevBoost }) {
   const [open,          setOpen]          = useState(false);
