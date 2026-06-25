@@ -1,8 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import PostActions from './PostActions';
 import CommentSheet from './CommentSheet';
+import LinkPreview from './LinkPreview';
 
 const BACKEND = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
+
+// Extract first URL from text
+function extractUrl(text) {
+  if (!text) return null;
+  const match = text.match(/https?:\/\/[^\s]+/);
+  return match ? match[0] : null;
+}
 
 export default function PostCard({ post, isPremium, userId, onLockTap }) {
   const isLocked = post.tier === 'premium' && !isPremium;
@@ -79,6 +87,11 @@ export default function PostCard({ post, isPremium, userId, onLockTap }) {
           <div className="p-3 text-sm text-gray-300">
             {isLocked ? post.caption.slice(0, 60) + '...' : post.caption}
           </div>
+        )}
+
+        {/* Link preview */}
+        {!isLocked && extractUrl(post.caption) && (
+          <LinkPreview url={extractUrl(post.caption)} />
         )}
 
         {/* Date */}
