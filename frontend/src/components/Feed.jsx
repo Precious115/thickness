@@ -91,7 +91,6 @@ export default function Feed({ isPremium, telegramId, onUnlocked }) {
               userId={telegramId}
               onLockTap={() => setShowGate(true)}
             />
-            {/* userId is now forwarded inside PostCard → PostActions */}
           ))}
         </div>
       )}
