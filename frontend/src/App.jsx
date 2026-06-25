@@ -103,7 +103,7 @@ export default function App() {
           <img
             src={logo}
             alt="Thickness"
-            className="h-14 w-auto object-contain"
+            className="h-24 w-auto object-contain"
             onClick={handleLogoTap}
           />
           <ProfileButton
