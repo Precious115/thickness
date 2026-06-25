@@ -22,7 +22,7 @@ export default function BookmarksSheet({ userId, onClose }) {
   }, [userId]);
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col justify-end bg-black/60" onClick={onClose}>
+    <div className="fixed inset-0 z-[60] flex flex-col justify-end bg-black/60" onClick={onClose}>
       <div
         className="bg-zinc-900 rounded-t-2xl flex flex-col"
         style={{ maxHeight: '85vh' }}
