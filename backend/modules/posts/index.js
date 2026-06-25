@@ -62,4 +62,11 @@ async function getPostById(postId) {
   return data;
 }
 
-module.exports = { syncPost, getFeed, getPostById };
+async function deletePost(telegramMessageId) {
+  await supabase
+    .from('posts')
+    .delete()
+    .eq('telegram_message_id', telegramMessageId);
+}
+
+module.exports = { syncPost, deletePost, getFeed, getPostById };
