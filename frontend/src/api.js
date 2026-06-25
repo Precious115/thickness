@@ -20,3 +20,5 @@ export const toggleBookmark        = (userId, postId)         => API.post('/api/
 export const getUserBookmarks      = (userId)                 => API.get(`/api/bookmarks/user/${userId}`);
 export const getNotifications      = (userId)                 => API.get(`/api/notifications/${userId}`);
 export const markNotificationsRead = (userId)                 => API.post(`/api/notifications/read/${userId}`);
+
+export const deletePost            = (postId, adminSecret)    => API.delete(`/api/posts/${postId}`, { headers: { 'x-admin-secret': adminSecret } });
