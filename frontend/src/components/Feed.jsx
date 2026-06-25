@@ -6,19 +6,26 @@ import { useLanguage } from '../i18n/LanguageContext';
 
 export default function Feed({ isPremium, telegramId, onUnlocked }) {
   const { t } = useLanguage();
-  const [posts, setPosts]         = useState([]);
-  const [loading, setLoading]     = useState(true);
-  const [showGate, setShowGate]   = useState(false);
-  const [activeTab, setActiveTab] = useState('free');
+  const [freePosts,    setFreePosts]    = useState([]);
+  const [premiumPosts, setPremiumPosts] = useState([]);
+  const [loading,      setLoading]      = useState(true);
+  const [showGate,     setShowGate]     = useState(false);
+  const [activeTab,    setActiveTab]    = useState('free');
 
   useEffect(() => {
     async function load() {
       try {
         setLoading(true);
-        const res = isPremium
-          ? await getFullFeed()
-          : await getFreeFeed();
-        setPosts(res.data.posts || []);
+
+        // Always load free posts
+        const freeRes = await getFreeFeed();
+        setFreePosts((freeRes.data.posts || []).filter(p => p.tier === 'free'));
+
+        // Load premium posts only if user is premium
+        if (isPremium) {
+          const fullRes = await getFullFeed();
+          setPremiumPosts((fullRes.data.posts || []).filter(p => p.tier === 'premium'));
+        }
       } catch (err) {
         console.error(err);
       } finally {
@@ -45,9 +52,7 @@ export default function Feed({ isPremium, telegramId, onUnlocked }) {
     );
   }
 
-  const displayed = activeTab === 'free'
-    ? posts.filter(p => p.tier === 'free')
-    : posts;
+  const displayed = activeTab === 'free' ? freePosts : premiumPosts;
 
   return (
     <div className="flex flex-col h-full">
