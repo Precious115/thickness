@@ -3,6 +3,7 @@ import { LanguageProvider } from './i18n/LanguageContext';
 import Feed from './components/Feed';
 import SubscriptionBadge from './components/SubscriptionBadge';
 import { loginUser, getSubscription } from './api';
+import logo from './assets/logo.webp';
 
 export default function App() {
   const [user, setUser]           = useState(null);
@@ -19,7 +20,6 @@ export default function App() {
 
         const initData = tg?.initData;
 
-        // Block access if not opened inside Telegram
         if (!initData) {
           setError('Open this app inside Telegram.');
           setLoading(false);
@@ -64,8 +64,12 @@ export default function App() {
       <div className="flex flex-col h-screen bg-dark text-white max-w-md mx-auto">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-          <h1 className="text-lg font-bold tracking-wide">Thickness</h1>
+        <div className="flex items-center justify-between px-4 py-2 border-b border-border">
+          <img
+            src={logo}
+            alt="Thickness"
+            className="h-8 w-auto object-contain"
+          />
           <SubscriptionBadge isPremium={isPremium} expiresAt={expiresAt} />
         </div>
 
