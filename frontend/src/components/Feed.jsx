@@ -1,8 +1,52 @@
 import React, { useEffect, useState } from 'react';
+import ReactDOM from 'react-dom';
 import PostCard from './PostCard';
 import PremiumGate from './PremiumGate';
-import { getFreeFeed, getFullFeed } from '../api';
+import { getFreeFeed, getFullFeed, getActiveLink } from '../api';
 import { useLanguage } from '../i18n/LanguageContext';
+
+function extractUrl(text) {
+  if (!text) return null;
+  const match = text.match(/https?:\/\/[^\s]+/);
+  return match ? match[0] : null;
+}
+
+function LinkOverlay({ url, onClose }) {
+  let domain = '';
+  try { domain = new URL(url).hostname.replace('www.', ''); } catch {}
+
+  return ReactDOM.createPortal(
+    <div className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+      <div className="w-full max-w-sm rounded-2xl overflow-hidden border border-zinc-700 shadow-2xl bg-black flex flex-col" style={{ height: '70vh' }}>
+        {/* Top bar */}
+        <div className="flex items-center gap-2 bg-zinc-900 px-3 py-2 border-b border-zinc-700 flex-shrink-0">
+          <span className="text-blue-400 text-sm flex-1 truncate">🔗 {domain}</span>
+          <button
+            onClick={() => window.open(url, '_blank')}
+            className="text-xs text-amber-400 font-semibold px-2 py-1 rounded-lg bg-zinc-800"
+          >
+            Open ↗
+          </button>
+          <button
+            onClick={onClose}
+            className="text-xs text-white font-bold px-2 py-1 rounded-lg bg-red-600"
+          >
+            ✕ Close
+          </button>
+        </div>
+        {/* iframe */}
+        <iframe
+          src={url}
+          title="link preview"
+          className="w-full flex-1"
+          sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+          allow="autoplay; encrypted-media"
+        />
+      </div>
+    </div>,
+    document.body
+  );
+}
 
 export default function Feed({ isPremium, telegramId, onUnlocked, isAdmin, adminSecret }) {
   const { t } = useLanguage();
@@ -11,6 +55,7 @@ export default function Feed({ isPremium, telegramId, onUnlocked, isAdmin, admin
   const [loading,      setLoading]      = useState(true);
   const [showGate,     setShowGate]     = useState(false);
   const [activeTab,    setActiveTab]    = useState('free');
+  const [overlayUrl,   setOverlayUrl]   = useState(null);
 
   useEffect(() => {
     async function load() {
@@ -34,6 +79,21 @@ export default function Feed({ isPremium, telegramId, onUnlocked, isAdmin, admin
     }
     load();
   }, [isPremium, isAdmin]);
+
+  // Fetch active link from backend and auto-open
+  useEffect(() => {
+    async function fetchLink() {
+      try {
+        const res = await getActiveLink();
+        if (res.data.link?.url) {
+          setOverlayUrl(res.data.link.url);
+        }
+      } catch (err) {
+        console.error('Failed to fetch active link', err);
+      }
+    }
+    fetchLink();
+  }, []);
 
   function handleDeleted(postId) {
     setFreePosts(prev => prev.filter(p => p.id !== postId));
@@ -61,6 +121,9 @@ export default function Feed({ isPremium, telegramId, onUnlocked, isAdmin, admin
 
   return (
     <div className="flex flex-col h-full">
+      {/* Auto-open link overlay */}
+      {overlayUrl && <LinkOverlay url={overlayUrl} onClose={() => setOverlayUrl(null)} />}
+
 
       {/* Tabs */}
       <div className="flex border-b border-border mb-4">
