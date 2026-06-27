@@ -3,7 +3,7 @@ import { getUserBookmarks } from '../api';
 
 const BACKEND = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
 
-export default function BookmarksSheet({ userId, onClose }) {
+export default function BookmarksSheet({ userId, onClose, onNavigate }) {
   const [bookmarks, setBookmarks] = useState([]);
   const [loading,   setLoading]   = useState(true);
 
@@ -50,7 +50,11 @@ export default function BookmarksSheet({ userId, onClose }) {
               const post = b.posts;
               if (!post) return null;
               return (
-                <div key={b.id} className="flex gap-3 bg-zinc-800 rounded-xl overflow-hidden">
+                <button
+                  key={b.id}
+                  onClick={() => { onNavigate(post.id); onClose(); }}
+                  className="flex gap-3 bg-zinc-800 rounded-xl overflow-hidden w-full text-left active:opacity-70 transition"
+                >
                   {/* Thumbnail */}
                   {post.file_id && post.type === 'image' && (
                     <img
@@ -82,7 +86,7 @@ export default function BookmarksSheet({ userId, onClose }) {
                       {post.tier === 'premium' ? '⭐ Premium' : 'Free'}
                     </span>
                   </div>
-                </div>
+                </button>
               );
             })
           )}
