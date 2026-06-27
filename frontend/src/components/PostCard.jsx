@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import PostActions from './PostActions';
-import CommentSheet from './CommentSheet';
 import LinkPreview from './LinkPreview';
 import { deletePost } from '../api';
 
@@ -13,9 +12,8 @@ function extractUrl(text) {
   return match ? match[0] : null;
 }
 
-export default function PostCard({ post, isPremium, userId, onLockTap, isAdmin, adminSecret, onDeleted }) {
+export default function PostCard({ post, isPremium, userId, onLockTap, isAdmin, adminSecret, onDeleted, postRef }) {
   const isLocked = post.tier === 'premium' && !isPremium;
-  const [showComments, setShowComments] = useState(false);
   const [mediaUrl, setMediaUrl]         = useState(null);
   const [mediaError, setMediaError]     = useState(false);
   const [deleting, setDeleting]         = useState(false);
@@ -84,7 +82,7 @@ export default function PostCard({ post, isPremium, userId, onLockTap, isAdmin, 
 
   return (
     <>
-      <div className="bg-card border border-border rounded-2xl overflow-hidden mb-4">
+      <div ref={postRef} className="bg-card border border-border rounded-2xl overflow-hidden mb-4">
 
         {/* Media */}
         <div className="relative bg-[#111] min-h-[180px] flex items-center justify-center">
@@ -108,12 +106,16 @@ export default function PostCard({ post, isPremium, userId, onLockTap, isAdmin, 
           )}
         </div>
 
-        {/* Caption */}
-        {post.caption && (
-          <div className="p-3 text-sm text-gray-300">
-            {isLocked ? post.caption.slice(0, 60) + '...' : post.caption}
-          </div>
-        )}
+        {/* Caption — URL stripped out since it shows in the link preview box */}
+        {(() => {
+          const text = post.caption?.replace(/https?:\/\/[^\s]+/g, '').trim();
+          if (!text) return null;
+          return (
+            <div className="p-3 text-sm text-gray-300">
+              {isLocked ? text.slice(0, 60) + '...' : text}
+            </div>
+          );
+        })()}
 
         {/* Link preview */}
         {!isLocked && extractUrl(post.caption) && (
@@ -129,18 +131,10 @@ export default function PostCard({ post, isPremium, userId, onLockTap, isAdmin, 
         <PostActions
           post={post}
           userId={userId}
-          onCommentTap={() => setShowComments(true)}
+
         />
       </div>
 
-      {/* Comment sheet */}
-      {showComments && (
-        <CommentSheet
-          post={post}
-          userId={userId}
-          onClose={() => setShowComments(false)}
-        />
-      )}
     </>
   );
 }
