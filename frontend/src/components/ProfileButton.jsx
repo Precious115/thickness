@@ -4,7 +4,7 @@ import BookmarksSheet from './BookmarksSheet';
 const BACKEND = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
 const DEV_BOOST_SECRET = import.meta.env.VITE_DEV_BOOST_SECRET || import.meta.env.VITE_DEV_PASSWORD || 'devboost123';
 
-export default function ProfileButton({ user, isPremium, expiresAt, devBoostUnlocked, onDevBoost }) {
+export default function ProfileButton({ user, isPremium, expiresAt, devBoostUnlocked, onDevBoost, onNavigate }) {
   const [open,          setOpen]          = useState(false);
   const [showBookmarks, setShowBookmarks] = useState(false);
   const [boosting,      setBoosting]      = useState(false);
@@ -130,6 +130,7 @@ export default function ProfileButton({ user, isPremium, expiresAt, devBoostUnlo
         <BookmarksSheet
           userId={user?.telegram_id}
           onClose={() => setShowBookmarks(false)}
+          onNavigate={onNavigate}
         />
       )}
     </>
