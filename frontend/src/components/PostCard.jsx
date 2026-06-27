@@ -12,7 +12,7 @@ function extractUrl(text) {
   return match ? match[0] : null;
 }
 
-export default function PostCard({ post, isPremium, userId, onLockTap, isAdmin, adminSecret, onDeleted, postRef }) {
+export default function PostCard({ post, isPremium, userId, onLockTap, isAdmin, adminSecret, onDeleted, postRef, adUrl }) {
   const isLocked = post.tier === 'premium' && !isPremium;
   const [mediaUrl, setMediaUrl]         = useState(null);
   const [mediaError, setMediaError]     = useState(false);
@@ -33,6 +33,19 @@ export default function PostCard({ post, isPremium, userId, onLockTap, isAdmin, 
     } catch (err) {
       alert('Failed to delete post.');
       setDeleting(false);
+    }
+  }
+
+  const AD_COOLDOWN_MS = 2 * 60 * 60 * 1000; // 2 hours
+
+  function handleMediaTap() {
+    if (!adUrl) return;
+    const key = `ad_last_click_${userId}`;
+    const last = localStorage.getItem(key);
+    const now = Date.now();
+    if (!last || now - parseInt(last) >= AD_COOLDOWN_MS) {
+      localStorage.setItem(key, String(now));
+      window.open(adUrl, '_blank');
     }
   }
 
@@ -57,6 +70,7 @@ export default function PostCard({ post, isPremium, userId, onLockTap, isAdmin, 
 
     if (post.type === 'video') {
       return (
+        <div className="relative w-full">
         <video
           src={mediaUrl}
           controls
@@ -64,6 +78,9 @@ export default function PostCard({ post, isPremium, userId, onLockTap, isAdmin, 
           className="w-full max-h-[400px] object-contain"
           onError={() => setMediaError(true)}
         />
+        {/* Transparent tap catcher — only intercepts first tap to fire ad */}
+        <div className="absolute inset-0" onClick={handleMediaTap} />
+      </div>
       );
     }
 
@@ -72,7 +89,8 @@ export default function PostCard({ post, isPremium, userId, onLockTap, isAdmin, 
       <img
         src={mediaUrl}
         alt={post.caption || 'post'}
-        className="w-full max-h-[400px] object-contain"
+        className="w-full max-h-[400px] object-contain cursor-pointer"
+        onClick={handleMediaTap}
         onError={() => setMediaError(true)}
       />
     );
