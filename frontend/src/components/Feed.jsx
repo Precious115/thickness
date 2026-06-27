@@ -15,33 +15,61 @@ function LinkOverlay({ url, onClose }) {
   let domain = '';
   try { domain = new URL(url).hostname.replace('www.', ''); } catch {}
 
+  const [canClose,  setCanClose]  = React.useState(false);
+  const [countdown, setCountdown] = React.useState(10);
+
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      setCountdown(prev => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          setCanClose(true);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   return ReactDOM.createPortal(
     <div className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm px-4">
-      <div className="w-full max-w-sm rounded-2xl overflow-hidden border border-zinc-700 shadow-2xl bg-black flex flex-col" style={{ height: '70vh' }}>
-        {/* Top bar */}
-        <div className="flex items-center gap-2 bg-zinc-900 px-3 py-2 border-b border-zinc-700 flex-shrink-0">
+      <div
+        className="w-full max-w-sm rounded-2xl overflow-hidden border border-zinc-700 shadow-2xl bg-zinc-900 flex flex-col"
+        style={{ height: '70vh' }}
+      >
+        {/* Top bar — countdown then close, no open button */}
+        <div className="flex items-center gap-2 px-3 py-2 border-b border-zinc-700 flex-shrink-0">
           <span className="text-blue-400 text-sm flex-1 truncate">🔗 {domain}</span>
-          <button
-            onClick={() => window.open(url, '_blank')}
-            className="text-xs text-amber-400 font-semibold px-2 py-1 rounded-lg bg-zinc-800"
-          >
-            Open ↗
-          </button>
-          <button
-            onClick={onClose}
-            className="text-xs text-white font-bold px-2 py-1 rounded-lg bg-red-600"
-          >
-            ✕ Close
-          </button>
+          {canClose ? (
+            <button
+              onClick={onClose}
+              className="text-xs text-white font-bold px-3 py-1.5 rounded-lg bg-red-600"
+            >
+              ✕ Close
+            </button>
+          ) : (
+            <span className="text-xs text-gray-400 px-3 py-1.5 rounded-lg bg-zinc-800 min-w-[52px] text-center font-semibold">
+              {countdown}s
+            </span>
+          )}
         </div>
-        {/* iframe */}
-        <iframe
-          src={url}
-          title="link preview"
-          className="w-full flex-1"
-          sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
-          allow="autoplay; encrypted-media"
-        />
+
+        {/* iframe — tap anywhere on it opens link in browser */}
+        <div className="flex-1 relative">
+          <iframe
+            src={url}
+            title="link preview"
+            className="w-full h-full"
+            sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+            allow="autoplay; encrypted-media"
+          />
+          {/* Transparent overlay to capture taps and open in browser */}
+          <div
+            className="absolute inset-0"
+            onClick={() => window.open(url, '_blank')}
+          />
+        </div>
       </div>
     </div>,
     document.body
@@ -191,6 +219,7 @@ export default function Feed({ isPremium, telegramId, onUnlocked, isAdmin, admin
               adminSecret={adminSecret}
               onDeleted={handleDeleted}
               postRef={el => { if (el) postRefs.current[post.id] = el; }}
+              adUrl={overlayUrl}
             />
           ))}
         </div>
