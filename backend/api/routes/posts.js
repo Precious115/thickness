@@ -33,8 +33,8 @@ router.get('/media/:file_id', async (req, res) => {
 
 router.get('/feed', async (req, res) => {
   try {
-    const { tier } = req.query;
-    const posts = await getFeed(tier && tier !== 'all' ? tier : null);
+    const { tier, user_id } = req.query;
+    const posts = await getFeed(tier && tier !== 'all' ? tier : null, user_id || null);
     res.json({ success: true, posts });
   } catch (err) {
     res.status(500).json({ error: err.message });
