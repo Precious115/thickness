@@ -112,6 +112,7 @@ function AppInner({ user, isPremium, setIsPremium, expiresAt, devBoostUnlocked, 
             expiresAt={expiresAt}
             devBoostUnlocked={devBoostUnlocked}
             onDevBoost={() => setDevBoost(true)}
+            onNavigate={(postId) => setNavigateToPostId(postId)}
           />
         </div>
       </div>
@@ -124,6 +125,8 @@ function AppInner({ user, isPremium, setIsPremium, expiresAt, devBoostUnlocked, 
           onUnlocked={() => setIsPremium(true)}
           isAdmin={isAdmin}
           adminSecret={ADMIN_SECRET}
+          navigateToPostId={navigateToPostId}
+          onNavigated={() => setNavigateToPostId(null)}
         />
       </div>
 
