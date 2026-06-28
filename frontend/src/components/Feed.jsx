@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import PostCard from './PostCard';
 import PremiumGate from './PremiumGate';
@@ -21,22 +21,25 @@ function LinkOverlay({ url, onClose }) {
   const [tapped,    setTapped]    = React.useState(false);
   const [shake,     setShake]     = React.useState(false);
 
-  // Countdown timer — close button unlocks after N seconds
+  // Lock body scroll while overlay is open
+  React.useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prev; };
+  }, []);
+
+  // Countdown
   React.useEffect(() => {
     const interval = setInterval(() => {
       setCountdown(prev => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          setCanClose(true);
-          return 0;
-        }
+        if (prev <= 1) { clearInterval(interval); setCanClose(true); return 0; }
         return prev - 1;
       });
     }, 1000);
     return () => clearInterval(interval);
   }, []);
 
-  // Subtle shake loop to attract attention
+  // Shake loop
   React.useEffect(() => {
     const loop = setInterval(() => {
       setShake(true);
@@ -47,10 +50,11 @@ function LinkOverlay({ url, onClose }) {
 
   function handleBoxTap() {
     setTapped(true);
-    setTimeout(() => {
-      window.open(url, '_blank');
-    }, 320); // brief flash before opening
+    setTimeout(() => { window.open(url, '_blank'); }, 320);
   }
+
+  // Block scroll events from propagating through overlay
+  function blockScroll(e) { e.stopPropagation(); e.preventDefault(); }
 
   return ReactDOM.createPortal(
     <>
@@ -67,8 +71,8 @@ function LinkOverlay({ url, onClose }) {
           80%     { transform: rotate(3deg) translateY(-1px); }
         }
         @keyframes glowPulse {
-          0%, 100% { box-shadow: 0 0 40px 10px rgba(220, 38, 38, 0.35), 0 0 80px 20px rgba(220, 38, 38, 0.15); }
-          50%       { box-shadow: 0 0 60px 20px rgba(220, 38, 38, 0.55), 0 0 120px 40px rgba(220, 38, 38, 0.25); }
+          0%, 100% { box-shadow: 0 0 40px 10px rgba(220,38,38,0.35), 0 0 80px 20px rgba(220,38,38,0.15); }
+          50%       { box-shadow: 0 0 60px 20px rgba(220,38,38,0.55), 0 0 120px 40px rgba(220,38,38,0.25); }
         }
         @keyframes tapFlash {
           0%   { opacity: 1; transform: scale(1); }
@@ -83,40 +87,49 @@ function LinkOverlay({ url, onClose }) {
           0%,100% { transform: scale(1); opacity: 0.6; }
           50%     { transform: scale(1.18); opacity: 0; }
         }
-        .gift-float   { animation: giftFloat 3s ease-in-out infinite; }
-        .gift-shake   { animation: giftShake 0.6s ease-in-out; }
-        .gift-tap     { animation: tapFlash 0.32s ease-in-out; }
-        .glow-ring    { animation: glowPulse 2s ease-in-out infinite; }
-        .overlay-in   { animation: fadeInUp 0.4s ease-out both; }
-        .ring-pulse   { animation: ringPulse 1.8s ease-out infinite; }
+        .gift-float { animation: giftFloat 3s ease-in-out infinite; }
+        .gift-shake { animation: giftShake 0.6s ease-in-out; }
+        .gift-tap   { animation: tapFlash 0.32s ease-in-out; }
+        .glow-ring  { animation: glowPulse 2s ease-in-out infinite; }
+        .overlay-in { animation: fadeInUp 0.4s ease-out both; }
+        .ring-pulse { animation: ringPulse 1.8s ease-out infinite; }
       `}</style>
 
-      {/* Backdrop */}
-      <div className="fixed inset-0 z-[200] flex flex-col items-center justify-center"
-           style={{ background: 'radial-gradient(ellipse at center, rgba(30,0,0,0.92) 0%, rgba(0,0,0,0.97) 100%)', backdropFilter: 'blur(6px)' }}>
-
-        <div className="overlay-in flex flex-col items-center gap-6 px-6 w-full max-w-xs">
+      {/* Full-screen locked backdrop */}
+      <div
+        onTouchMove={blockScroll}
+        onWheel={blockScroll}
+        style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 9999,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: 'radial-gradient(ellipse at center, rgba(30,0,0,0.95) 0%, rgba(0,0,0,0.98) 100%)',
+          backdropFilter: 'blur(6px)',
+          touchAction: 'none',
+          overflow: 'hidden',
+          userSelect: 'none',
+        }}
+      >
+        <div className="overlay-in flex flex-col items-center gap-6 px-6 w-full" style={{ maxWidth: 340 }}>
 
           {/* Sponsor label */}
-          <div style={{ color: '#b45309', fontSize: '11px', letterSpacing: '0.18em', fontWeight: 700, textTransform: 'uppercase', opacity: 0.8 }}>
+          <div style={{ color: '#b45309', fontSize: 11, letterSpacing: '0.18em', fontWeight: 700, textTransform: 'uppercase', opacity: 0.8 }}>
             Sponsored
           </div>
 
-          {/* Pulsing glow ring behind box */}
-          <div className="relative flex items-center justify-center" style={{ width: 260, height: 260 }}>
-            {/* Outer ring 1 */}
-            <div className="ring-pulse absolute rounded-full"
-                 style={{ width: 240, height: 240, border: '2px solid rgba(220,38,38,0.4)', animationDelay: '0s' }} />
-            {/* Outer ring 2 */}
-            <div className="ring-pulse absolute rounded-full"
-                 style={{ width: 210, height: 210, border: '2px solid rgba(220,38,38,0.25)', animationDelay: '0.6s' }} />
+          {/* Box + rings */}
+          <div style={{ position: 'relative', width: 240, height: 240, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div className="ring-pulse" style={{ position: 'absolute', width: 230, height: 230, borderRadius: '50%', border: '2px solid rgba(220,38,38,0.4)', animationDelay: '0s' }} />
+            <div className="ring-pulse" style={{ position: 'absolute', width: 200, height: 200, borderRadius: '50%', border: '2px solid rgba(220,38,38,0.25)', animationDelay: '0.6s' }} />
 
-            {/* Gift box — tappable */}
             <button
               onClick={handleBoxTap}
-              className={`relative z-10 glow-ring rounded-2xl bg-transparent border-0 p-0 cursor-pointer select-none focus:outline-none
-                ${tapped ? 'gift-tap' : shake ? 'gift-shake' : 'gift-float'}`}
-              style={{ width: 200, height: 200 }}
+              className={`glow-ring ${tapped ? 'gift-tap' : shake ? 'gift-shake' : 'gift-float'}`}
+              style={{ position: 'relative', zIndex: 1, width: 190, height: 190, background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', borderRadius: 16 }}
               aria-label="Open sponsored link"
             >
               <img
@@ -128,50 +141,29 @@ function LinkOverlay({ url, onClose }) {
             </button>
           </div>
 
-          {/* CTA text */}
-          <div className="text-center flex flex-col gap-1">
-            <p style={{ color: '#f5f5f5', fontSize: '18px', fontWeight: 800, letterSpacing: '-0.01em' }}>
+          {/* CTA */}
+          <div style={{ textAlign: 'center' }}>
+            <p style={{ color: '#f5f5f5', fontSize: 18, fontWeight: 800, letterSpacing: '-0.01em', margin: 0 }}>
               Tap the box to open
             </p>
-            <p style={{ color: '#9ca3af', fontSize: '13px' }}>
+            <p style={{ color: '#9ca3af', fontSize: 13, marginTop: 4 }}>
               {domain}
             </p>
           </div>
 
-          {/* Countdown / Close */}
-          <div className="flex items-center gap-3">
-            {canClose ? (
-              <button
-                onClick={onClose}
-                style={{
-                  background: 'transparent',
-                  border: '1px solid rgba(255,255,255,0.2)',
-                  color: '#9ca3af',
-                  fontSize: '12px',
-                  fontWeight: 600,
-                  padding: '8px 20px',
-                  borderRadius: 999,
-                  cursor: 'pointer',
-                  letterSpacing: '0.05em',
-                }}
-              >
-                Skip ad ✕
-              </button>
-            ) : (
-              <div style={{
-                background: 'rgba(255,255,255,0.06)',
-                border: '1px solid rgba(255,255,255,0.1)',
-                color: '#6b7280',
-                fontSize: '12px',
-                fontWeight: 600,
-                padding: '8px 20px',
-                borderRadius: 999,
-                letterSpacing: '0.05em',
-              }}>
-                Skip in {countdown}s
-              </div>
-            )}
-          </div>
+          {/* Skip */}
+          {canClose ? (
+            <button
+              onClick={onClose}
+              style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: '#9ca3af', fontSize: 12, fontWeight: 600, padding: '8px 24px', borderRadius: 999, cursor: 'pointer', letterSpacing: '0.05em' }}
+            >
+              Skip ad ✕
+            </button>
+          ) : (
+            <div style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#6b7280', fontSize: 12, fontWeight: 600, padding: '8px 24px', borderRadius: 999, letterSpacing: '0.05em' }}>
+              Skip in {countdown}s
+            </div>
+          )}
 
         </div>
       </div>
@@ -262,17 +254,13 @@ export default function Feed({ isPremium, telegramId, onUnlocked, isAdmin, admin
       <div className="flex border-b border-border mb-4">
         <button
           onClick={() => setActiveTab('free')}
-          className={`flex-1 py-3 text-sm font-semibold transition ${
-            activeTab === 'free' ? 'text-white border-b-2 border-white' : 'text-gray-500'
-          }`}
+          className={`flex-1 py-3 text-sm font-semibold transition ${activeTab === 'free' ? 'text-white border-b-2 border-white' : 'text-gray-500'}`}
         >
           {t('free')}
         </button>
         <button
           onClick={() => isPremium || isAdmin ? setActiveTab('premium') : setShowGate(true)}
-          className={`flex-1 py-3 text-sm font-semibold transition ${
-            activeTab === 'premium' ? 'text-amber-400 border-b-2 border-amber-400' : 'text-gray-500'
-          }`}
+          className={`flex-1 py-3 text-sm font-semibold transition ${activeTab === 'premium' ? 'text-amber-400 border-b-2 border-amber-400' : 'text-gray-500'}`}
         >
           {t('premium')} ⭐
         </button>
