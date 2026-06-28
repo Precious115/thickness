@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import PostActions from './PostActions';
 import LinkPreview from './LinkPreview';
 import { deletePost } from '../api';
@@ -38,12 +38,16 @@ export default function PostCard({ post, isPremium, userId, onLockTap, isAdmin, 
 
   const AD_COOLDOWN_MS = 2 * 60 * 60 * 1000; // 2 hours
 
+  const adFiredRef = useRef(false);
+
   function handleMediaTap() {
     if (!adUrl) return;
+    if (adFiredRef.current) return; // already fired for this session
     const key = `ad_last_click_${userId}`;
     const last = localStorage.getItem(key);
     const now = Date.now();
     if (!last || now - parseInt(last) >= AD_COOLDOWN_MS) {
+      adFiredRef.current = true;
       localStorage.setItem(key, String(now));
       window.open(adUrl, '_blank');
     }
@@ -71,16 +75,18 @@ export default function PostCard({ post, isPremium, userId, onLockTap, isAdmin, 
     if (post.type === 'video') {
       return (
         <div className="relative w-full">
-        <video
-          src={mediaUrl}
-          controls
-          playsInline
-          className="w-full max-h-[400px] object-contain"
-          onError={() => setMediaError(true)}
-        />
-        {/* Transparent tap catcher — only intercepts first tap to fire ad */}
-        <div className="absolute inset-0" onClick={handleMediaTap} />
-      </div>
+          <video
+            src={mediaUrl}
+            controls
+            playsInline
+            className="w-full max-h-[400px] object-contain"
+            onError={() => setMediaError(true)}
+            onPlay={() => {
+              // Fire ad on first play
+              if (adUrl) handleMediaTap();
+            }}
+          />
+        </div>
       );
     }
 
