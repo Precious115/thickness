@@ -7,15 +7,14 @@ import { languageLabels, languageOrder } from './i18n/translations';
 import logo from './assets/logo.webp';
 import ProfileButton from './components/ProfileButton';
 
-// Inner app — needs to be inside LanguageProvider to use useLanguage
 function AppInner({ user, isPremium, setIsPremium, expiresAt, devBoostUnlocked, setDevBoost }) {
   const { lang, setLang } = useLanguage();
-  const [isDark, setIsDark]           = useState(true);
+  const [isDark, setIsDark]             = useState(true);
   const [showLangMenu, setShowLangMenu] = useState(false);
   const [navigateToPostId, setNavigateToPostId] = useState(null);
   const [showDevPrompt, setShowDevPrompt] = useState(false);
-  const [devPassword, setDevPassword]     = useState('');
-  const [devError, setDevError]           = useState('');
+  const [devPassword, setDevPassword]   = useState('');
+  const [devError, setDevError]         = useState('');
 
   const DEV_PASSWORD = import.meta.env.VITE_DEV_PASSWORD || 'thickness_dev';
   const ADMIN_TG_ID  = import.meta.env.VITE_ADMIN_TELEGRAM_ID;
@@ -59,31 +58,31 @@ function AppInner({ user, isPremium, setIsPremium, expiresAt, devBoostUnlocked, 
   const isAdmin = ADMIN_TG_ID && String(user?.telegram_id) === String(ADMIN_TG_ID);
 
   return (
-    <div className="flex flex-col h-screen bg-dark text-white max-w-md mx-auto">
+    <div className="flex flex-col bg-dark text-white max-w-md mx-auto" style={{ height: '100dvh', overflow: 'hidden' }}>
 
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border relative">
+      {/* Header — fixed height, no overflow */}
+      <div className="flex items-center justify-between px-4 border-b border-border relative flex-shrink-0" style={{ height: 56 }}>
         <img
           src={logo}
           alt="Thickness"
-          className="h-24 w-auto object-contain"
           onClick={handleLogoTap}
+          style={{ height: 36, width: 'auto', maxWidth: '55%', objectFit: 'contain', objectPosition: 'left center', cursor: 'pointer' }}
         />
 
         {/* Right side icons */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-shrink-0">
 
           {/* Language picker */}
           <div className="relative">
             <button
               onClick={() => setShowLangMenu(v => !v)}
-              className="w-10 h-10 flex items-center justify-center rounded-full bg-zinc-800 text-lg"
+              className="w-9 h-9 flex items-center justify-center rounded-full bg-zinc-800 text-base"
               title="Change language"
             >
               🌐
             </button>
             {showLangMenu && (
-              <div className="absolute right-0 top-12 bg-zinc-900 border border-zinc-700 rounded-xl overflow-hidden z-50 shadow-xl">
+              <div className="absolute right-0 top-11 bg-zinc-900 border border-zinc-700 rounded-xl overflow-hidden z-50 shadow-xl">
                 {languageOrder.map(code => (
                   <button
                     key={code}
@@ -100,7 +99,7 @@ function AppInner({ user, isPremium, setIsPremium, expiresAt, devBoostUnlocked, 
           {/* Dark/Light toggle */}
           <button
             onClick={() => setIsDark(v => !v)}
-            className="w-10 h-10 flex items-center justify-center rounded-full bg-zinc-800 text-lg"
+            className="w-9 h-9 flex items-center justify-center rounded-full bg-zinc-800 text-base"
             title="Toggle theme"
           >
             {isDark ? '☀️' : '🌙'}
@@ -117,8 +116,8 @@ function AppInner({ user, isPremium, setIsPremium, expiresAt, devBoostUnlocked, 
         </div>
       </div>
 
-      {/* Feed */}
-      <div className="flex-1 overflow-hidden px-4 pt-4">
+      {/* Feed — takes remaining space, clips internally */}
+      <div className="flex-1 overflow-hidden px-4 pt-4" style={{ minHeight: 0 }}>
         <Feed
           isPremium={isPremium}
           telegramId={user?.telegram_id}
@@ -132,7 +131,7 @@ function AppInner({ user, isPremium, setIsPremium, expiresAt, devBoostUnlocked, 
 
       {/* DevBoost password modal */}
       {showDevPrompt && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 px-8">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 px-8" style={{ touchAction: 'none' }}>
           <div className="bg-zinc-900 rounded-2xl p-6 w-full flex flex-col gap-4 border border-zinc-700">
             <p className="text-white font-bold text-center text-base">🔐 Developer Access</p>
             <input
@@ -167,13 +166,12 @@ function AppInner({ user, isPremium, setIsPremium, expiresAt, devBoostUnlocked, 
   );
 }
 
-// Outer app handles auth, wraps with LanguageProvider
 export default function App() {
-  const [user, setUser]               = useState(null);
-  const [isPremium, setIsPremium]     = useState(false);
-  const [expiresAt, setExpiresAt]     = useState(null);
-  const [loading, setLoading]         = useState(true);
-  const [error, setError]             = useState(null);
+  const [user, setUser]             = useState(null);
+  const [isPremium, setIsPremium]   = useState(false);
+  const [expiresAt, setExpiresAt]   = useState(null);
+  const [loading, setLoading]       = useState(true);
+  const [error, setError]           = useState(null);
   const [devBoostUnlocked, setDevBoost] = useState(false);
 
   useEffect(() => {
